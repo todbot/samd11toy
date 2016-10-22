@@ -1,0 +1,69 @@
+ 
+Feather M0 in bootloader mode:
+CDC device at vendorId/ProductId = 0x239A / 0x0008
+Feather M0 normal mode:
+"misc common class device" at vendorId/ProductId = 0x239A / 0x800B
+
+
+Mattair in bootloader mode:
+CDC device at vid/pId = 0x16D0 / 0x0557
+Mattair in normal mode:
+CDC device at vid/pid = 0x16D0 / 0x0557
+
+bossac.exe -d --port=COM5 -U true -i -e -w -v Blink_Demo_ATSAMD21E18A.bin -R
+  -d = --debug
+  -U true == --force_usb_port=true
+  -i == info
+  -e == --erase
+  -w == --write
+  -v == --verify
+  -R == --reset
+
+Install OSX-capable version of Mattair Arduino support:
+https://www.mattairtech.com/software/arduino/beta/package_MattairTech_index.json
+https://www.mattairtech.com/software/arduino/beta/package_MattairTech_sam_m0p-1.6.7-beta-b0_index.json
+
+Maattair board needs special bossac from them (has ATSAMD11 support)
+
+Mattair bootloader in ~/projects/samd/mattairtech-ArduinoCore-samd/bootloaders/zero
+Compile for MT-11 (SAMD11D14AM) with:
+% MCU=SAMD11D14AM FLASHSIZE=16KB make clean  &&  MCU=SAMD11D14AM FLASHSIZE=16KB make
+
+Mattair "Burn Bootloader" runs command:
+(from: https://github.com/mattairtech/ArduinoCore-samd#bootloader-firmware-installation )
+/Users/tod/Library/Arduino15/packages/RedBearLab/tools/openocd/0.10.0-dev-nrf5/bin/openocd -d3 -s
+/Users/tod/Library/Arduino15/packages/RedBearLab/tools/openocd/0.10.0-dev-nrf5/share/openocd/scripts/ -f
+/Users/tod/Library/Arduino15/packages/MattairTech_Arduino/hardware/samd/1.6.7-beta-b0/variants/MT_D11/openocd_scripts/SAMD11D14AM.cfg
+-c telnet_port disabled; init; halt; at91samd bootloader 0;
+program {{/Users/tod/Library/Arduino15/packages/MattairTech_Arduino/hardware/samd/1.6.7-beta-b0/bootloaders/zero/binaries/sam_m0p_sam_ba_SAMD11D14AM.bin}} verify reset; shutdown
+
+
+Program with my bootloader:
+/Users/tod/Library/Arduino15/packages/arduino/tools/openocd/0.9.0-arduino/bin/openocd  \
+-s /Users/tod/Library/Arduino15/packages/arduino/tools/openocd/0.9.0-arduino/share/openocd/scripts \
+-f /Users/tod/Library/Arduino15/packages/MattairTech_Arduino/hardware/samd/1.6.7-beta-b0/variants/MT_D11/openocd_scripts/SAMD11D14AM.cfg
+-c "telnet_port disabled; init; halt; at91samd bootloader 0; program {{/Users/tod/projects/samd/mattairtech-ArduinoCore-samd/bootloaders/zero/sam_m0p_sam_ba_SAMD11D14AM.bin}} verify reset; shutdown"
+
+# ------------------------------------------------------------------
+To get to work with Arduino:
+# get arduino core
+cd ~/Documents/Arduino/hardware
+mkdir tod-samd
+cd tod-samd
+ln -s ~/projects/samd/tod-mattairtech-ArduinoCore-samd samd
+# get bossac
+cd ~/Documents/Arduino/tools
+cp -a ~/Library/Arduino15/packages/MattairTech_Arduino/tools  .
+# edit ~/projects/samd/tod-mattairtech-ArduinoCore-samd/boards.txt,  change:
+todmattairtech_mt_d11.upload.tool=tod-samd:bossac
+
+
+# ------------------------------------------------------------------
+Checking UID of D11
+hacked MT-11 serials:
+1917728894
+1364020019
+normal MT-11 serials:
+2474509598
+1364020019
+
